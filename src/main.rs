@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::{
     io::{BufRead, BufReader, Read, Write},
     net::{TcpListener, TcpStream},
@@ -31,25 +32,6 @@ fn handle_request(mut stream: TcpStream) {
 }
 
 #[derive(Debug)]
-pub struct Header<'a> {
-    pub key: &'a str,
-    pub value: &'a str,
-}
-
-impl<'a> From<&'a str> for Header<'a> {
-    fn from(value: &'a str) -> Self {
-        if let Some(res) = value.split_once(":") {
-            return Self {
-                key: res.0.trim(),
-                value: res.1.trim(),
-            };
-        };
-
-        Self { key: "", value: "" }
-    }
-}
-
-#[derive(Debug)]
 pub enum HttpMethod {
     GET,
     POST,
@@ -75,7 +57,7 @@ impl From<&str> for HttpMethod {
 #[derive(Debug)]
 pub struct Request<'a> {
     pub request_line: &'a str,
-    pub headers: Vec<Header<'a>>,
+    pub headers: HashMap<&'a str, &'a str>,
     pub body: &'a str,
     pub method: HttpMethod,
     pub target: &'a str,
@@ -85,14 +67,16 @@ pub struct Request<'a> {
 impl<'a> From<&'a str> for Request<'a> {
     fn from(value: &'a str) -> Self {
         let lines: Vec<&'a str> = value.split("\r\n").collect();
-        let mut headers: Vec<Header> = vec![];
+        let mut headers: HashMap<&'a str, &'a str> = HashMap::new();
         let mut count_headers = 0;
         for header in &lines[1..] {
             count_headers += 1;
             if *header == "" {
                 break;
             }
-            headers.push(Header::from(*header));
+            if let Some(op) = header.split_once(":") {
+                headers.insert(op.0, op.1);
+            };
         }
         let request_line = lines[0];
         let rq_tokens: Vec<&str> = request_line.split_whitespace().collect();
