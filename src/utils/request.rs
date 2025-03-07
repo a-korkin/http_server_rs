@@ -1,27 +1,5 @@
+use crate::utils::http::HttpMethod;
 use std::collections::HashMap;
-
-#[derive(Debug)]
-pub enum HttpMethod {
-    GET,
-    POST,
-    PUT,
-    PATCH,
-    DELETE,
-    UNKNOWN,
-}
-
-impl From<&str> for HttpMethod {
-    fn from(value: &str) -> Self {
-        match value.to_uppercase().as_str() {
-            "GET" => Self::GET,
-            "POST" => Self::POST,
-            "PUT" => Self::PUT,
-            "PATCH" => Self::PATCH,
-            "DELETE" => Self::DELETE,
-            _ => Self::UNKNOWN,
-        }
-    }
-}
 
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -45,7 +23,7 @@ impl<'a> From<&'a str> for Request<'a> {
                 break;
             }
             if let Some(op) = header.split_once(":") {
-                headers.insert(op.0, op.1);
+                headers.insert(op.0.trim(), op.1.trim());
             };
         }
         let request_line = lines[0];
