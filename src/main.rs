@@ -23,19 +23,54 @@ fn handle_request(mut stream: TcpStream) {
     }
 
     let result: String = request_array.iter().map(|a| *a as char).collect();
-    println!("{}", result);
+    parse_request(&result);
 
     let response = "HTTP/1.1 200 OK\r\n";
     stream.write(response.as_bytes()).unwrap();
 }
 
+#[derive(Debug)]
+pub struct Header {
+    pub key: String,
+    pub value: String,
+}
+
+#[derive(Debug)]
+pub struct Request<'a> {
+    pub request_line: &'a str,
+    pub headers: Vec<Header>,
+    pub body: &'a str,
+}
+
+impl<'a> From<&'a str> for Request<'a> {
+    fn from(value: &'a str) -> Self {
+        let lines: Vec<&'a str> = value.split("\r\n").collect();
+        let mut headers: Vec<&str> = vec![];
+        let mut count_headers = 0;
+        for header in &lines[1..] {
+            count_headers += 1;
+            if *header == "" {
+                break;
+            }
+            headers.push(*header);
+        }
+        Self {
+            request_line: lines[0],
+            headers: vec![],
+            body: lines[count_headers + 1..][0],
+        }
+    }
+}
+
+fn parse_request(req: &str) {
+    let request = Request::from(req);
+    println!("request: {:?}", request);
+}
+
 #[allow(dead_code)]
 fn handle_str(mut stream: TcpStream) {
     let mut buf = String::new();
-    // let mut b: Vec<u8> = vec![0];
     stream.read_to_string(&mut buf).unwrap();
-    // stream.read_to_end(&mut b).unwrap();
-    // println!("check");
     println!("{}", buf);
     let response = "HTTP/1.1 200 OK\r\n".as_bytes();
     stream.write(response).unwrap();
