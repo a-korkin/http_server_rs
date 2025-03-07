@@ -1,8 +1,15 @@
-use std::collections::HashMap;
 use std::{
     io::{BufRead, BufReader, Read, Write},
     net::{TcpListener, TcpStream},
 };
+
+mod request;
+use request::Request;
+
+pub fn parse_request(req: &str) {
+    let request = Request::from(req);
+    println!("request: {:?}", request);
+}
 
 fn handle_request(mut stream: TcpStream) {
     let mut buf = [0; 128];
@@ -29,71 +36,6 @@ fn handle_request(mut stream: TcpStream) {
 
     let response = "HTTP/1.1 200 OK\r\n";
     stream.write(response.as_bytes()).unwrap();
-}
-
-#[derive(Debug)]
-pub enum HttpMethod {
-    GET,
-    POST,
-    PUT,
-    PATCH,
-    DELETE,
-    UNKNOWN,
-}
-
-impl From<&str> for HttpMethod {
-    fn from(value: &str) -> Self {
-        match value.to_uppercase().as_str() {
-            "GET" => Self::GET,
-            "POST" => Self::POST,
-            "PUT" => Self::PUT,
-            "PATCH" => Self::PATCH,
-            "DELETE" => Self::DELETE,
-            _ => Self::UNKNOWN,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct Request<'a> {
-    pub request_line: &'a str,
-    pub headers: HashMap<&'a str, &'a str>,
-    pub body: &'a str,
-    pub method: HttpMethod,
-    pub target: &'a str,
-    pub protocol: &'a str,
-}
-
-impl<'a> From<&'a str> for Request<'a> {
-    fn from(value: &'a str) -> Self {
-        let lines: Vec<&'a str> = value.split("\r\n").collect();
-        let mut headers: HashMap<&'a str, &'a str> = HashMap::new();
-        let mut count_headers = 0;
-        for header in &lines[1..] {
-            count_headers += 1;
-            if *header == "" {
-                break;
-            }
-            if let Some(op) = header.split_once(":") {
-                headers.insert(op.0, op.1);
-            };
-        }
-        let request_line = lines[0];
-        let rq_tokens: Vec<&str> = request_line.split_whitespace().collect();
-        Self {
-            request_line,
-            headers,
-            body: lines[count_headers + 1..][0],
-            method: HttpMethod::from(rq_tokens[0]),
-            target: rq_tokens[1],
-            protocol: rq_tokens[2],
-        }
-    }
-}
-
-fn parse_request(req: &str) {
-    let request = Request::from(req);
-    println!("request: {:?}", request);
 }
 
 #[allow(dead_code)]
