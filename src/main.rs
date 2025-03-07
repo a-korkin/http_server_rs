@@ -7,21 +7,19 @@ use std::{
 fn handler(mut stream: TcpStream) {
     let mut buf = [0; 128];
 
-    let mut iter: u8 = 0;
+    let mut stop = false;
     loop {
-        iter += 1;
-        let bytes = stream.read(&mut buf).unwrap();
-        // println!("{}", str::from_utf8(&buf).unwrap());
-        let chars = buf.iter().map(|a| *a as char).collect::<Vec<char>>();
-        println!("iter: {}\n{:?}", iter, chars);
-        if buf == "".as_bytes() {
-            println!("empty");
-        }
-        if buf == "\r\n".as_bytes() {
-            println!("check");
-        }
-        if bytes == 0 {
+        if stop {
             break;
+        }
+        let _ = stream.read(&mut buf).unwrap();
+        for ch in buf.iter() {
+            if *ch == b'\0' {
+                println!("\nstop");
+                stop = true;
+                break;
+            }
+            print!("{}", *ch as char);
         }
         buf = [0; 128];
     }
