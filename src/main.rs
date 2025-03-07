@@ -3,44 +3,45 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
-fn handle_bytes(mut stream: TcpStream) {
+fn handle_request(mut stream: TcpStream) {
     let mut buf = [0; 128];
-
     let mut stop = false;
-    let mut count_bytes = 0;
+    let mut request_array: Vec<u8> = vec![0];
     loop {
         if stop {
             break;
         }
         let _ = stream.read(&mut buf).unwrap();
         for ch in buf.iter() {
-            count_bytes += 1;
             if *ch == b'\0' {
-                println!("\nstop");
                 stop = true;
                 break;
             }
-            print!("{}", *ch as char);
+            request_array.push(*ch);
         }
         buf = [0; 128];
     }
 
-    let mut _request_str: Vec<u8> = vec![0; count_bytes];
-    println!("lenght: {}", _request_str.len());
+    let result: String = request_array.iter().map(|a| *a as char).collect();
+    println!("{}", result);
 
     let response = "HTTP/1.1 200 OK\r\n";
     stream.write(response.as_bytes()).unwrap();
 }
 
+#[allow(dead_code)]
 fn handle_str(mut stream: TcpStream) {
     let mut buf = String::new();
+    // let mut b: Vec<u8> = vec![0];
     stream.read_to_string(&mut buf).unwrap();
+    // stream.read_to_end(&mut b).unwrap();
+    // println!("check");
     println!("{}", buf);
-    stream.shutdown(std::net::Shutdown::Read).unwrap();
-    let response = "HTTP/1.1 200 OK\r\n";
-    stream.write(response.as_bytes()).unwrap();
+    let response = "HTTP/1.1 200 OK\r\n".as_bytes();
+    stream.write(response).unwrap();
 }
 
+#[allow(dead_code)]
 fn handle_buf(mut stream: TcpStream) {
     let mut reader = BufReader::new(&stream);
     let mut body = String::new();
@@ -65,12 +66,23 @@ fn handle_buf(mut stream: TcpStream) {
     stream.write(response.as_bytes()).unwrap();
 }
 
+#[allow(dead_code)]
+fn handle(mut stream: TcpStream) {
+    let mut buf: Vec<u8> = vec![0];
+    let mut reader = BufReader::new(&stream);
+    reader.read_until(b'\0', &mut buf).unwrap();
+
+    let response = "HTTP/1.1 200 OK\r\n";
+    stream.write(response.as_bytes()).unwrap();
+}
+
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
     for stream in listener.incoming() {
         let stream = stream.unwrap();
-        handle_bytes(stream);
+        handle_request(stream);
         // handle_str(stream);
         // handle_buf(stream);
+        // handle(stream);
     }
 }
