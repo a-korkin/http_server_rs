@@ -22,7 +22,8 @@ fn handle_request(mut stream: TcpStream) {
         buf = [0; 128];
     }
 
-    let result: String = request_array.iter().map(|a| *a as char).collect();
+    let mut result: String = request_array.iter().map(|a| *a as char).collect();
+    result = result.replace('\0', "");
     parse_request(&result);
 
     let response = "HTTP/1.1 200 OK\r\n";
@@ -30,34 +31,78 @@ fn handle_request(mut stream: TcpStream) {
 }
 
 #[derive(Debug)]
-pub struct Header {
-    pub key: String,
-    pub value: String,
+pub struct Header<'a> {
+    pub key: &'a str,
+    pub value: &'a str,
+}
+
+impl<'a> From<&'a str> for Header<'a> {
+    fn from(value: &'a str) -> Self {
+        if let Some(res) = value.split_once(":") {
+            return Self {
+                key: res.0.trim(),
+                value: res.1.trim(),
+            };
+        };
+
+        Self { key: "", value: "" }
+    }
+}
+
+#[derive(Debug)]
+pub enum HttpMethod {
+    GET,
+    POST,
+    PUT,
+    PATCH,
+    DELETE,
+    UNKNOWN,
+}
+
+impl From<&str> for HttpMethod {
+    fn from(value: &str) -> Self {
+        match value.to_uppercase().as_str() {
+            "GET" => Self::GET,
+            "POST" => Self::POST,
+            "PUT" => Self::PUT,
+            "PATCH" => Self::PATCH,
+            "DELETE" => Self::DELETE,
+            _ => Self::UNKNOWN,
+        }
+    }
 }
 
 #[derive(Debug)]
 pub struct Request<'a> {
     pub request_line: &'a str,
-    pub headers: Vec<Header>,
+    pub headers: Vec<Header<'a>>,
     pub body: &'a str,
+    pub method: HttpMethod,
+    pub target: &'a str,
+    pub protocol: &'a str,
 }
 
 impl<'a> From<&'a str> for Request<'a> {
     fn from(value: &'a str) -> Self {
         let lines: Vec<&'a str> = value.split("\r\n").collect();
-        let mut headers: Vec<&str> = vec![];
+        let mut headers: Vec<Header> = vec![];
         let mut count_headers = 0;
         for header in &lines[1..] {
             count_headers += 1;
             if *header == "" {
                 break;
             }
-            headers.push(*header);
+            headers.push(Header::from(*header));
         }
+        let request_line = lines[0];
+        let rq_tokens: Vec<&str> = request_line.split_whitespace().collect();
         Self {
-            request_line: lines[0],
-            headers: vec![],
+            request_line,
+            headers,
             body: lines[count_headers + 1..][0],
+            method: HttpMethod::from(rq_tokens[0]),
+            target: rq_tokens[1],
+            protocol: rq_tokens[2],
         }
     }
 }
