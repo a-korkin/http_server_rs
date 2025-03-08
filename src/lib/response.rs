@@ -1,4 +1,4 @@
-use crate::utils::http;
+use crate::http;
 use chrono::Local;
 use std::{collections::HashMap, fmt::Display};
 
@@ -12,7 +12,11 @@ impl<'a> Response<'a> {
     pub fn new(status: http::HttpStatus, body: &'a str) -> Self {
         let now = Local::now().to_utc();
         let date = now.format("%a, %d %b %Y %H:%M:%S GMT").to_string();
-        let headers = HashMap::from([("Date", date), ("Content-Length", body.len().to_string())]);
+        let headers = HashMap::from([
+            ("Date", date),
+            ("Content-Length", body.len().to_string()),
+            ("Content-Type", String::from("text/plain")),
+        ]);
         Self {
             status,
             headers,
@@ -30,7 +34,7 @@ impl<'a> Display for Response<'a> {
             .collect();
         write!(
             f,
-            "HTTP/1.1 {}\r\n{}\r\n{}\r\n",
+            "HTTP/1.1 {}\r\n{}\r\n{}",
             self.status, headers, self.body
         )
     }

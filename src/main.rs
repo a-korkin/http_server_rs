@@ -3,9 +3,8 @@ use std::{
     net::{TcpListener, TcpStream},
 };
 
-mod utils;
-use utils::request::Request;
-use utils::response::Response;
+use http::request::Request;
+use http::response::Response;
 
 pub fn parse_request(req: &str) {
     let request = Request::from(req);
@@ -35,7 +34,7 @@ fn handle_request(mut stream: TcpStream) {
     result = result.replace('\0', "");
     parse_request(&result);
 
-    let response = Response::new(utils::http::HttpStatus::Status200, "hello world");
+    let response = Response::new(http::http::HttpStatus::Status200, "hello world\n");
     stream.write(response.to_string().as_bytes()).unwrap();
 }
 

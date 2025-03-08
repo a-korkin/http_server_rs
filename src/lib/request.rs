@@ -1,4 +1,4 @@
-use crate::utils::http::HttpMethod;
+use crate::http::HttpMethod;
 use std::collections::HashMap;
 
 #[derive(Debug)]
