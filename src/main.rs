@@ -1,5 +1,7 @@
 use http::core::run;
+use tokio;
 
-fn main() {
-    run("127.0.0.1:8080");
+#[tokio::main]
+async fn main() {
+    run("127.0.0.1:8080").await;
 }

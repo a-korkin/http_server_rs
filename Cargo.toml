@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 chrono = "0.4.40"
+tokio = { version = "1.44.0", features = ["full"] }
 
 [lib]
 name = "http"
@@ -13,3 +14,6 @@ path = "src/lib/mod.rs"
 [[bin]]
 name = "http_server"
 path = "src/main.rs"
+
+[dev-dependencies]
+reqwest = "0.12.12"

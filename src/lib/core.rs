@@ -57,7 +57,7 @@ impl Display for HttpStatus {
     }
 }
 
-pub fn run(addr: &str) {
+pub async fn run(addr: &str) {
     let listener = TcpListener::bind(addr).unwrap();
     for stream in listener.incoming() {
         let stream = stream.unwrap();
