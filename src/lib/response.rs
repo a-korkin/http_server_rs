@@ -1,15 +1,15 @@
-use crate::http;
+use crate::core::HttpStatus;
 use chrono::Local;
 use std::{collections::HashMap, fmt::Display};
 
 pub struct Response<'a> {
-    pub status: http::HttpStatus,
+    pub status: HttpStatus,
     pub headers: HashMap<&'a str, String>,
     pub body: &'a str,
 }
 
 impl<'a> Response<'a> {
-    pub fn new(status: http::HttpStatus, body: &'a str) -> Self {
+    pub fn new(status: HttpStatus, body: &'a str) -> Self {
         let now = Local::now().to_utc();
         let date = now.format("%a, %d %b %Y %H:%M:%S GMT").to_string();
         let headers = HashMap::from([
