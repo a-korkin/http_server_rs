@@ -35,7 +35,7 @@ fn handle_request(mut stream: TcpStream) {
     result = result.replace('\0', "");
     parse_request(&result);
 
-    let response = Response::new(utils::http::HttpStatus::Status200, "");
+    let response = Response::new(utils::http::HttpStatus::Status200, "hello");
     stream.write(response.to_string().as_bytes()).unwrap();
 }
 
