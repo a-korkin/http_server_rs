@@ -30,7 +30,7 @@ impl<'a> Display for Response<'a> {
             .collect();
         write!(
             f,
-            "HTTP/1.1 {}\r\n{}\r\n\r\n{}",
+            "HTTP/1.1 {}\r\n{}\r\n{}\r\n",
             self.status, headers, self.body
         )
     }
